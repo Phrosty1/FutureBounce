@@ -115,14 +115,47 @@ notificationManager.notify(0, n);
     Runnable initializeScreen = new Runnable() {
         @Override
         public void run() {
+
+            String[] elements;
+
+            try {
+                elements = getAssets().list("txt");
+                Log.d("tmp", "elements:" + elements.length);
+                for (String w : elements)
+                    Log.d("tmp", w);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            long totTime = System.currentTimeMillis();
             //ListView mListView = (ListView) findViewById(R.id.sampleListView);
             //TextView mTextView = new TextView(mContext);
             //TextView mTextView = (TextView) findViewById(R.id.section_label);
             //mTextView.setText("Newly Added");
             //mListView.addView(mTextView);
             String[] allwords = ("aa,aah,aahed,aahing,aahs").split(",");
-            for (Word w : lWords)
-                lWords.add(w);
+            for (String w : allwords)
+                lWords.add(new Word(w));
+            Log.d("tmp", "Read in " + (System.currentTimeMillis() - totTime));
+            Log.d("tmp", "Count " + lWords.size());
+
+            try {
+                String fileName = "dictionary.dat";
+                FileReader fileReader = new FileReader(fileName);
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                String line = null;
+                while ((line = bufferedReader.readLine()) != null) {
+                    String[] allwords2 = line.split(",");
+                    for (String w : allwords2)
+                        lWords.add(new Word(w));
+                }
+                bufferedReader.close();
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
         }
     };
 

@@ -51,13 +51,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Possible" />
+                android:text="By Length" />
             <TextView
                 android:id="@+id/textTitle2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="5 Letter" />
+                android:text="By Value" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/llResultsRow1"
@@ -70,13 +70,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="New Text" />
+                android:text=".textResults1." />
             <TextView
                 android:id="@+id/textResults2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="New Text" />
+                android:text=".textResults2." />
         </LinearLayout>
 
         <LinearLayout
@@ -107,13 +107,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="New Text" />
+                android:text=".textResults3." />
             <TextView
                 android:id="@+id/textResults4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="New Text" />
+                android:text=".textResults4." />
         </LinearLayout>
 
     </LinearLayout>

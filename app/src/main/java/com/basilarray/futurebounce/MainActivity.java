@@ -4,8 +4,14 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -14,6 +20,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -111,43 +118,22 @@ notificationManager.notify(0, n);
     }
 
     public ArrayList<Word> lWords = new ArrayList<Word>();
+    public ArrayList<Word> lResultWords = new ArrayList<Word>();
 
     Runnable initializeScreen = new Runnable() {
         @Override
         public void run() {
-
-            String[] elements;
-
-            try {
-                elements = getAssets().list("txt");
-                Log.d("tmp", "elements:" + elements.length);
-                for (String w : elements)
-                    Log.d("tmp", w);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             long totTime = System.currentTimeMillis();
-            //ListView mListView = (ListView) findViewById(R.id.sampleListView);
-            //TextView mTextView = new TextView(mContext);
-            //TextView mTextView = (TextView) findViewById(R.id.section_label);
-            //mTextView.setText("Newly Added");
-            //mListView.addView(mTextView);
-            String[] allwords = ("aa,aah,aahed,aahing,aahs").split(",");
-            for (String w : allwords)
-                lWords.add(new Word(w));
-            Log.d("tmp", "Read in " + (System.currentTimeMillis() - totTime));
-            Log.d("tmp", "Count " + lWords.size());
-
             try {
-                String fileName = "dictionary.dat";
-                FileReader fileReader = new FileReader(fileName);
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                InputStream inputStream = getResources().openRawResource(R.raw.dictionary);
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
-                    String[] allwords2 = line.split(",");
-                    for (String w : allwords2)
-                        lWords.add(new Word(w));
+                    String[] allwords = line.split(",");
+                    for (String w : allwords) {
+                        if (!(w.contains("q") && !w.contains("qu")))
+                            lWords.add(new Word(w));
+                    }
                 }
                 bufferedReader.close();
             } catch (FileNotFoundException ex) {
@@ -156,48 +142,75 @@ notificationManager.notify(0, n);
                 ex.printStackTrace();
             }
 
+            Log.d("tmp", "Read in " + (System.currentTimeMillis() - totTime));
+            Log.d("tmp", "Count " + lWords.size());
         }
     };
 
     public void FindMatches(View v) {
         EditText mEditText = (EditText) findViewById(R.id.editText);
         if (mEditText.getText().length() < 2)
-            mEditText.setText("aha");
+            mEditText.setText("ahaghaustngiela");
         String letters = mEditText.getText().toString().toLowerCase();
-
+        int len = letters.length();
         long totTime = System.currentTimeMillis();
         //int needMark = 1; // letters.length();
-
-
-        Log.d("tmp", "Read in " + (System.currentTimeMillis() - totTime));
-        Log.d("tmp", "Count " + lWords.size());
         totTime = System.currentTimeMillis();
+        lResultWords.clear();
 
+        word:
         for (Word w : lWords) {
-            String tmpWord = w.word;
-            String tmpLetters = letters;
-            int mostMark = tmpLetters.indexOf(" ");
-            for (int i = 0, n = tmpWord.length(); i < n; i++) {
-                int len = letters.length();
-                int idx = tmpLetters.indexOf(tmpWord.charAt(i));
-                if (idx == -1) {
-                    w.value -= 3;
-                    w.fullyMade = false;
-                } else {
-                    w.value += letters.length() - idx;
-                    tmpLetters = tmpLetters.substring(0, idx) + " " + tmpLetters.substring(idx + 1, len);
+            w.value = 0;
+            w.fullyMade = false;
+            String sLetters = letters;
+            boolean bFullyMade = true;
+            for (char c : w.word.toCharArray()) {
+                int idx = sLetters.indexOf(c);
+                if (idx != -1) {
+                    sLetters = sLetters.substring(0, idx) + " " + sLetters.substring(idx + 1, len);
+                    w.value += (len - idx) * (len - idx);
+                } else continue word;
+            }
+            w.fullyMade = bFullyMade;
+            lResultWords.add(w);
+            //if (w.fullyMade) Log.d("tmp", w.word);
+        }
+        Log.d("tmp", "Valued " + (System.currentTimeMillis() - totTime));
+        Collections.sort(lResultWords, new Comparator<Word>() {
+            @Override
+            public int compare(Word p1, Word p2) {
+                return p2.value - p1.value;
+            }
+        });
+        Log.d("tmp", "Sorted " + (System.currentTimeMillis() - totTime));
+
+        ((TextView) findViewById(R.id.textResults1)).setText(sfPullResults(0));
+        ((TextView) findViewById(R.id.textResults3)).setText(sfPullResults(6));
+        ((TextView) findViewById(R.id.textResults4)).setText(sfPullResults(8));
+
+        Collections.sort(lResultWords, new Comparator<Word>() {
+            @Override
+            public int compare(Word p1, Word p2) {
+                return (10000 * (p2.word.length() - p1.word.length())) + (p2.value - p1.value);
+            }
+        });
+        ((TextView) findViewById(R.id.textResults2)).setText(sfPullResults(0));
+        Log.d("tmp", "Finished " + (System.currentTimeMillis() - totTime));
+    }
+
+    public String sfPullResults(int len) {
+        int nCntDown = 10;
+        String sResults = "";
+        for (Word w : lResultWords) {
+            if (w.fullyMade) {
+                if (len == 0 || w.word.length() == len) {
+                    sResults += "" + w.word + "(" + w.word.length() + ")" + w.value + "\n";
+                    nCntDown--;
+                    if (nCntDown <= 0) return sResults;
                 }
             }
-            Log.d("tmp", tmpWord + "|" + tmpLetters + "|" + w.value + "," + w.fullyMade);
-            if (w.word.equals("haughtinesses"))
-                break;
-            //if (w.fullyMade) break;
         }
-
-        Log.d("tmp", "Read in " + (System.currentTimeMillis() - totTime));
-        TextView mTextResults1 = (TextView) findViewById(R.id.textResults1);
-        mTextResults1.setText("Newly Added");
-
+        return sResults;
     }
 
     public void Remind(String title, String text) {
